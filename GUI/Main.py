@@ -1,5 +1,5 @@
 from tkinter import *
-
+import csv
 
 
 #click function for button
@@ -9,7 +9,8 @@ def click():
     #here 0.0 (clear every thing before the first line and the first character)
 
     try:
-        definition = customers[value1]
+        details = customers[value1]
+        definition = details[0]
     except:
         definition = "sorry there is no customer"
     output.insert(END, definition)    
@@ -18,8 +19,6 @@ def click():
 def close_window():
     window.destroy()
     exit()
-
-
 
 window = Tk()
 window.title("Store Interface")
@@ -46,10 +45,11 @@ output = Text(window, width = 75, height = 6, wrap=WORD)
 output.grid(row = 3, column = 0, columnspan = 3, sticky = W)
 
 #creating dict
-customers = {
-    'abc': '123',
-    'bcd': '234' 
-}
+reader = csv.reader(open('face-recognition/transactions.csv', 'r'))
+customers = {}
+for row in reader:
+    cname, phone, date, items = row
+    customers[cname] = phone, date, items
 
 #exit label
 Label(window, text="Click to exit: ", font= textformat) .grid(row = 4 , column = 0 , sticky=W)
@@ -60,3 +60,4 @@ Button(window, text = "EXIT", width = 6, command = close_window).grid(row = 5, c
 
 
 window.mainloop()
+
