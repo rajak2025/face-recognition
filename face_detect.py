@@ -6,7 +6,11 @@ import csv
 from datetime import datetime
 from tkinter import *
 # from PIL import ImageGrab
- 
+
+records_folder = 'Transactions'
+mainpath = os.listdir(records_folder)
+path_to_csv = mainpath[0]
+
 path = 'Images'
 images = []
 classNames = []
@@ -18,7 +22,7 @@ for cl in myList:
     classNames.append(os.path.splitext(cl)[0])
 print(classNames)
  
-def findEncodings(images):
+def find_encodings(images):
     encodeList = []
     for img in images:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -41,8 +45,33 @@ def mark_attendance(name):
 def show_gui(name1):
     #click function for button
     
+    def append_items():
+        newitems = newitem.get()
+        success_entry.delete(0.0, END)
+        #here 0.0 (clear every thing before the first line and the first character)
+        try:
+            newname = name1.lower().capitalize()
+            details = customers[newname]
+            converteddetails = list(details)
+            converteddetails[2] = converteddetails[2] + ' '+newitems
+            details = tuple(converteddetails)
+            customers[newname] = details
+
+            #writing into the file
+            with open(f"{records_folder}/{path_to_csv}", 'w') as f:
+                for key in customers.keys():
+                    f.write("%s,"%(key))
+                    internalDetails = customers[key]
+                    f.write("%s,%s,%s\n"%(internalDetails[0], internalDetails[1], internalDetails[2]))
+            definition = "Items added to list\nAll Items purchased\n" + converteddetails[2]
+            success_entry.insert(END, definition)                    
+        except:
+            definition = "sorry an error occurred"
+            success_entry.insert(END, definition)
+
+    
     def click():
-        value1 = name.get()
+        value1 = name.get().capitalize()
         output.delete(0.0, END)
         #here 0.0 (clear every thing before the first line and the first character)
         try:
@@ -76,25 +105,38 @@ def show_gui(name1):
     #Label(window, text="Last Purchase Date: ", font= textformat) .grid(row = 2 , column = 0 , sticky=W)
 
     #creating button submit
-    Button(window, text = "SUBMIT", width = 6, command = click).grid(row = 2, column = 0, sticky=W)
+    Button(window, text = "Show old Purchases", width = 6, command = click).grid(row = 2, column = 0, sticky=W)
 
     #text box
     output = Text(window, width = 75, height = 6, wrap=WORD)
     output.grid(row = 3, column = 0, columnspan = 3, sticky = W)
 
     #creating dict
-    reader = csv.reader(open('transactions.csv', 'r'))
+    reader = csv.reader(open(f"{records_folder}/{path_to_csv}", 'r'))
     customers = {}
     for row in reader:
         cname, phone, date, items = row
         customers[cname] = phone, date, items
 
+    #creating label
+    Label(window, text="Enter Items ", font= textformat) .grid(row = 4 , column = 0 , sticky=W)
+
+    #Creating Entry for new Purchases
+    newitem = Entry(window, width = 20 , font = textformat)
+    newitem.grid(row = 5, column = 0, sticky = W)
+
+    #creating button submit
+    Button(window, text = "Entry New Items", width = 6, command = append_items).grid(row = 6, column = 0, sticky=W)    
+
+    #text box for successful entry
+    success_entry = Text(window, width = 75, height = 6, wrap=WORD)
+    success_entry.grid(row = 7, column = 0, columnspan = 3, sticky = W)
 
     #exit label
-    Label(window, text="Click to exit: ", font= textformat) .grid(row = 4 , column = 0 , sticky=W)
+    Label(window, text="Click to exit: ", font= textformat) .grid(row = 8 , column = 0 , sticky=W)
 
     #exit button
-    Button(window, text = "EXIT", width = 6, command = close_window).grid(row = 5, column = 0, sticky=W)
+    Button(window, text = "EXIT", width = 6, command = close_window).grid(row = 9, column = 0, sticky=W)
 
     window.mainloop()
 
@@ -127,7 +169,7 @@ def create_details_gui():
                 customers[name1] = details
 
                 #writing into the file
-                with open('C:/Users/USER/Desktop/rajashekar/face-recognition/face-recognition/transactions1.csv', 'w') as f:
+                with open(f"{records_folder}/{path_to_csv}", 'w') as f:
                     for key in customers.keys():
                         f.write("%s,"%(key))
                         internalDetails = customers[key]
@@ -135,8 +177,9 @@ def create_details_gui():
                 definition = "Customer already exists, Items added to list\nAll Items purchased\n" + converteddetails[2]
                 output.insert(END, definition)
             else:
-                with open('C:/Users/USER/Desktop/rajashekar/face-recognition/face-recognition/transactions1.csv', 'a') as f:
+                with open(f"{records_folder}/{path_to_csv}", 'a') as f:
                     f.write("%s,%s,%s,%s\n"%(name1,phone1,get_date(),items1))
+                definition = "Customers Details Entered Successfully, Please Press Exit"
         except:
             definition = "Could not load details"
             output.insert(END, definition)
@@ -182,7 +225,7 @@ def create_details_gui():
     output.grid(row = 5, column = 0, columnspan = 3, sticky = W)
 
     #creating dict of customers
-    reader  = csv.reader(open('C:/Users/USER/Desktop/rajashekar/face-recognition/face-recognition/transactions.csv', 'r'))
+    reader  = csv.reader(open(f"{records_folder}/{path_to_csv}", 'r'))
     customers = {}
     for row in reader:
         cname, cphone, cdate, citems = row
@@ -208,7 +251,7 @@ def create_details_gui():
 #     capScr = cv2.cvtColor(capScr, cv2.COLOR_RGB2BGR)
 #     return capScr
  
-encodeListKnown = findEncodings(images)
+encodeListKnown = find_encodings(images)
 print('Encoding Complete')
  
 cap = cv2.VideoCapture(0)
